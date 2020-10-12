@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\bikipDotnetCore\\bikip.city\\CityProject.csproj": {}
+    "D:\\bikipDotnetCore\\Bikip.City\\CityProject.csproj": {}
   },
   "projects": {
-    "D:\\bikipDotnetCore\\bikip.city\\CityProject.csproj": {
+    "D:\\bikipDotnetCore\\Bikip.City\\CityProject.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\bikipDotnetCore\\bikip.city\\CityProject.csproj",
+        "projectUniqueName": "D:\\bikipDotnetCore\\Bikip.City\\CityProject.csproj",
         "projectName": "CityProject",
-        "projectPath": "D:\\bikipDotnetCore\\bikip.city\\CityProject.csproj",
+        "projectPath": "D:\\bikipDotnetCore\\Bikip.City\\CityProject.csproj",
         "packagesPath": "C:\\Users\\dothanhl\\.nuget\\packages\\",
-        "outputPath": "D:\\bikipDotnetCore\\bikip.city\\obj\\",
+        "outputPath": "D:\\bikipDotnetCore\\Bikip.City\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\dothanhl\\AppData\\Roaming\\NuGet\\NuGet.Config",
