@@ -2,12 +2,12 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bikip.city.Controller {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/city")]
     public class CityController : ControllerBase 
     {
-        [HttpGet]
-        public JsonResult GetCities () 
+        [HttpGet("getall")]
+        public JsonResult GetCities() 
         {
             return new JsonResult(
                 new List<object>() 
