@@ -63,3 +63,9 @@ namespace Bikip.city.Controller {
 [HttpGet ("getonebyid/{id}")]
 public string GetOneCity (long id) 
 ```
+
+
+
+
+Other
+IActionResult: base class for consumer responses (Json, xml, string ... )
