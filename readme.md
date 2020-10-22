@@ -21,7 +21,7 @@ Http pipeline contains Middleware(s). Middleware are software components to deco
 2) Add an endpoint   
 
 2.1 In ConfigureServices method, add
-> services.AddControllers();
+> services.AddMvc();
 
 In Configure method, add
 ```
@@ -33,6 +33,8 @@ app.UseEndpoints(endpoints =>
 2.2 Create CityController.cs, with 
 > [ApiController] and [Route("api/[controller]")] attribute at class level  
 [controller] will be resolved as 'city' (prefix of CityController file name)
+
+> Remember extending <b>ControllerBase</b> from Microsoft.AspNetCore.Mvc
 
 > [HttpGet("getall")] attribute at method level
 
@@ -46,11 +48,11 @@ namespace Bikip.city.Controller {
         [HttpGet("getall")]
         public JsonResult GetCities() 
         {
-            return new JsonResult(
-                new List<object>() 
+            return Ok(
+                new List<City>()
                 {
-                    new {id = 1, Name = "Hanoi"},
-                    new {id = 2, Name = "HCM City"},
+                    new City(1, "Hanoi"),
+                    new City(2, "Dublin"),
                 }
             );
         }
@@ -70,7 +72,7 @@ public string GetOneCity (long id)
 Other
 IActionResult: base class for consumer responses (Json, xml, string ... )
 
-3. Status code  
+2.4. Status code  
 Example of returning 201
 ```
 public IActionResult GetOneCity(long id)
@@ -80,4 +82,22 @@ public IActionResult GetOneCity(long id)
     return objectResult;
 }
 ```
-or, for short, just `return BadRequest("Custom bad request message") or Unauthorized("Custom unauthorized message");;`
+or, for short, just `return BadRequest("Custom message") or Unauthorized("..."); or NotFound("...")`
+
+2.5. Input / output formatter  
+Each consumer can request a different output format, for example, JSON or XML.  
+AspNetCore supports Input and Output formatters by adding AddMvcOptions into Startup.cs / ConfigureServices() method
+```
+ services.AddMvc()
+    .AddMvcOptions(options =>
+    {
+        options.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+        // options.InputFormatters.Add(new XmlDataContractSerializerInputFormatter());  To accept input as XML
+    })
+```
+
+So, <b>in request header</b>, consumer can add `Accept:application/xml` to request XML format.
+By default, JSON format is return. Notably, `OutputFormatters` array <b>already</b> has JSON format as first element.
+
+* If encounter `Datacontract exception. Cannot be serialized`, add empty constructor in DTO.
+* Do not hard code `return new JsonResult()`. Use `return Ok()` instead

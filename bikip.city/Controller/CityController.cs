@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CityProject.Model;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bikip.city.Controller
@@ -11,11 +12,11 @@ namespace Bikip.city.Controller
         public IActionResult GetCities()
         {
 
-            return new JsonResult(
-                new List<object>()
+            return Ok(
+                new List<City>()
                 {
-                    new {id = 1, Name = "Hanoi"},
-                    new {id = 2, Name = "HCM City"},
+                    new City(1, "Hanoi"),
+                    new City(2, "Dublin"),
                 }
             );
         }
