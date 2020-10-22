@@ -69,3 +69,15 @@ public string GetOneCity (long id)
 
 Other
 IActionResult: base class for consumer responses (Json, xml, string ... )
+
+3. Status code  
+Example of returning 201
+```
+public IActionResult GetOneCity(long id)
+{
+    ObjectResult objectResult = new ObjectResult("ID: " + id);
+    objectResult.StatusCode = 201;
+    return objectResult;
+}
+```
+or, for short, just `return BadRequest("Custom bad request message") or Unauthorized("Custom unauthorized message");;`

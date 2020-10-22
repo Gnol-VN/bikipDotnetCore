@@ -10,6 +10,7 @@ namespace Bikip.city.Controller
         [HttpGet("getall")]
         public IActionResult GetCities()
         {
+
             return new JsonResult(
                 new List<object>()
                 {
@@ -20,9 +21,23 @@ namespace Bikip.city.Controller
         }
 
         [HttpGet("getonebyid/{id}")]
-        public string GetOneCity(long id)
+        public IActionResult GetOneCity(long id)
         {
-            return id.ToString();
+            ObjectResult objectResult = new ObjectResult("ID: " + id);
+            objectResult.StatusCode = 201;
+            return objectResult;
+        }
+
+        [HttpGet("badrequest")]
+        public IActionResult GetBadRequest()
+        {
+            return BadRequest("Custom bad request message");
+        }
+        
+        [HttpGet("unauthorized")]
+        public IActionResult GetForbidden()
+        {
+            return Unauthorized("Custom unauthorized message");
         }
     }
 }
