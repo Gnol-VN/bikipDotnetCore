@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using CityProject.Model;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,14 +12,7 @@ namespace Bikip.city.Controller
         [HttpGet("getall")]
         public IActionResult GetCities()
         {
-
-            return Ok(
-                new List<City>()
-                {
-                    new City(1, "Hanoi"),
-                    new City(2, "Dublin"),
-                }
-            );
+            return Ok(City.CityList);
         }
 
         [HttpGet("getonebyid/{id}")]
@@ -27,6 +21,21 @@ namespace Bikip.city.Controller
             ObjectResult objectResult = new ObjectResult("ID: " + id);
             objectResult.StatusCode = 201;
             return objectResult;
+        }
+
+        [HttpDelete("deletecity/{id}")]
+        public IActionResult DeleteOneCity(long id)
+        {
+            City cityToBeDeleted = City.CityList.FirstOrDefault(elem => elem.id == id);
+            City.CityList.Remove(cityToBeDeleted);
+            return NoContent();
+        }    
+
+        [HttpPost("posthotel")]
+        public IActionResult PostHotel([FromBody] Hotel hotel)
+        {
+            City.CityList[0].HotelList.Add(hotel);
+            return Created("null", City.CityList);
         }
 
         [HttpGet("badrequest")]
@@ -40,5 +49,6 @@ namespace Bikip.city.Controller
         {
             return Unauthorized("Custom unauthorized message");
         }
+
     }
 }

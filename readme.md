@@ -32,13 +32,13 @@ app.UseEndpoints(endpoints =>
 ```
 2.2 Create CityController.cs, with 
 > [ApiController] and [Route("api/[controller]")] attribute at class level  
-[controller] will be resolved as 'city' (prefix of CityController file name)
+<b>[controller]</b> will be resolved as 'city' (prefix of CityController file name)
 
 > Remember extending <b>ControllerBase</b> from Microsoft.AspNetCore.Mvc
 
-> [HttpGet("getall")] attribute at method level
+> [HttpGet("getall")] <b>attribute</b> at method level
 
-For example, 
+For example, GET, POST, DELETE methods
 ```
 namespace Bikip.city.Controller {
     [ApiController]
@@ -46,15 +46,32 @@ namespace Bikip.city.Controller {
     public class CityController : ControllerBase 
     {
         [HttpGet("getall")]
-        public JsonResult GetCities() 
+        public IActionResult GetCities()
         {
-            return Ok(
-                new List<City>()
-                {
-                    new City(1, "Hanoi"),
-                    new City(2, "Dublin"),
-                }
-            );
+            return Ok(City.CityList);
+        }
+
+        [HttpGet("getonebyid/{id}")]
+        public IActionResult GetOneCity(long id)
+        {
+            ObjectResult objectResult = new ObjectResult("ID: " + id);
+            objectResult.StatusCode = 201;
+            return objectResult;
+        }
+
+        [HttpDelete("deletecity/{id}")]
+        public IActionResult DeleteOneCity(long id)
+        {
+            City cityToBeDeleted = City.CityList.FirstOrDefault(elem => elem.id == id);
+            City.CityList.Remove(cityToBeDeleted);
+            return NoContent();
+        }    
+
+        [HttpPost("posthotel")]
+        public IActionResult PostHotel([FromBody] Hotel hotel)
+        {
+            City.CityList[0].HotelList.Add(hotel);
+            return Created("null", City.CityList);
         }
     }
 }
@@ -66,6 +83,9 @@ namespace Bikip.city.Controller {
 public string GetOneCity (long id) 
 ```
 
+2.3.2 Request Body
+
+    public IActionResult PostHotel([FromBody] Hotel hotel)
 
 
 
@@ -84,6 +104,8 @@ public IActionResult GetOneCity(long id)
 ```
 or, for short, just `return BadRequest("Custom message") or Unauthorized("..."); or NotFound("...")`
 
+`204`: No content (For PUT and DELETE)
+
 2.5. Input / output formatter  
 Each consumer can request a different output format, for example, JSON or XML.  
 AspNetCore supports Input and Output formatters by adding AddMvcOptions into Startup.cs / ConfigureServices() method
@@ -101,3 +123,16 @@ By default, JSON format is return. Notably, `OutputFormatters` array <b>already<
 
 * If encounter `Datacontract exception. Cannot be serialized`, add empty constructor in DTO.
 * Do not hard code `return new JsonResult()`. Use `return Ok()` instead
+
+
+3. Model   
+
+3.4. Required and validated fields
+
+```
+    [Required(ErrorMessage = "Custom message: email is required")]
+    [EmailAddress(ErrorMessage = "Custom message: email is not in correct format")]
+    public string Email { get; set; }
+``` 
+
+This namespace `System.ComponentModel.DataAnnotations` provides input validation before mapping into models
