@@ -144,7 +144,7 @@ This namespace `System.ComponentModel.DataAnnotations` provides input validation
 * Bind this dependant to the class to use (that class needs a backing field of Interface type to hold the dependant)
 
 
-For example, to inject a logger into a class, we declare an Interface typed backing field `_logger`, and inject it by <b>constructor injection</b> 
+Example 1, to inject a logger into a class, we declare an Interface typed backing field `_logger`, and inject it by <b>constructor injection</b> 
 ```
         private readonly ILogger<CityController> _logger;
 
@@ -153,6 +153,17 @@ For example, to inject a logger into a class, we declare an Interface typed back
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 ```
+
+Example 2, to get properties from `appsettings.[env].json`
+```
+        private readonly IConfiguration _configuration;
+        public LocalMailService(IConfiguration configuration)
+        {
+            _configuration = configuration ?? throw new ArgumentException(nameof(configuration));
+        }
+```
+then get it by `string from = _configuration["mailSetting:from"]`
+Notably, to change [env], right click in project file > Debug section > Environment variable
 
 5. Log to a file
 a. Install NLog.Web.AspNetCore from Nuget
@@ -189,4 +200,5 @@ services.AddTransient<IMailService, LocalMailService>();
 // For fixed type dependant
 services.AddTransient<LocalMailService>();
 ```
-d. Change constuctor and backing field of `CityController`, so now Controller can call dependant methods
+d. Change constuctor and backing field of `CityController`, so now Controller can call dependant methods   
+
