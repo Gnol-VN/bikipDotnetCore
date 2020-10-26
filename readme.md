@@ -176,3 +176,17 @@ c. Create `nlog.config` file at project level.
 </nlog>
 ```
 d. Log is located in `project\bin\Debug\netcoreapp3.1\nlog-2020-10-26.log`
+
+
+6. Add a service   
+For example, create two mail services: <b>Local</b> and <b>Cloud</b>  
+a. Create an interface for a service (For Dependency Injection later)   
+b. Create two concrete classes `LocalMailService` and `CloudMailService`   
+c. In `Startup.cs > ConfigureServices() method`, add 
+```
+// For flexible type dependant (prefereable)
+services.AddTransient<IMailService, LocalMailService>();
+// For fixed type dependant
+services.AddTransient<LocalMailService>();
+```
+d. Change constuctor and backing field of `CityController`, so now Controller can call dependant methods

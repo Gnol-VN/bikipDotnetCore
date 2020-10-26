@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CityProject.Model;
+using CityProject.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -12,10 +13,12 @@ namespace Bikip.city.Controller
     public class CityController : ControllerBase
     {
         private readonly ILogger<CityController> _logger;
+        private readonly IMailService _mailService;
 
-        public CityController(ILogger<CityController> logger)
+        public CityController(ILogger<CityController> logger, IMailService mailService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mailService = mailService ?? throw new ArgumentException(nameof(mailService));
         }
 
         [HttpGet("getall")]
@@ -37,8 +40,8 @@ namespace Bikip.city.Controller
         public IActionResult DeleteOneCity(long id)
         {
             City cityToBeDeleted = City.CityList.FirstOrDefault(elem => elem.id == id);
-            cityToBeDeleted.CityName = " a";
             City.CityList.Remove(cityToBeDeleted);
+            _mailService.Send();
             return NoContent();
         }    
 
