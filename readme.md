@@ -136,3 +136,43 @@ By default, JSON format is return. Notably, `OutputFormatters` array <b>already<
 ``` 
 
 This namespace `System.ComponentModel.DataAnnotations` provides input validation before mapping into models
+
+4. Dependency Injection   
+<b>Inversion of control</b>: to delegate [the instantiation a concrete dependent for a class] to an external component
+<b>Dependencies Injection</b>: use a central object - the container - to do two things:
+* Instantiate the concrete dependant
+* Bind this dependant to the class to use (that class needs a backing field of Interface type to hold the dependant)
+
+
+For example, to inject a logger into a class, we declare an Interface typed backing field `_logger`, and inject it by <b>constructor injection</b> 
+```
+        private readonly ILogger<CityController> _logger;
+
+        public CityController(ILogger<CityController> logger)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+```
+
+5. Log to a file
+a. Install NLog.Web.AspNetCore from Nuget
+b. Inject NLog to Program.cs: ` webBuilder.UseNLog();`
+c. Create `nlog.config` file at project level. 
+
+```
+<?xml version="1.0" encoding="utf-8" ?>
+<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+	  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+	<targets>
+		<target name="logfile" xsi:type="File" fileName="nlog-${shortdate}.log" />
+		<target name="logconsole" xsi:type="Console" />
+	</targets>
+
+	<rules>
+		<!-- <logger name="*" minlevel="Info" writeTo="logconsole" /> -->
+		<logger name="*" minlevel="Info" writeTo="logfile" />
+	</rules>
+</nlog>
+```
+d. Log is located in `project\bin\Debug\netcoreapp3.1\nlog-2020-10-26.log`
