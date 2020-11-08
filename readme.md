@@ -261,7 +261,7 @@ The constructor with `Database.EnsureCreated()` to create table if not exist
     ```
     public class CityDbContext : DbContext 
     {
-        public DbSet<City> Cities { get; set; }
+        public DbSet<City> Cities { get; set; } // Queries to DbSet are translated into SQL query
 
         public DbSet<Hotel> Hotels { get; set; }
 

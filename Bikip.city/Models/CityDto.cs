@@ -12,11 +12,7 @@ namespace CityProject.Models
 
         public List<HotelDto> HotelList { get; set; }
 
-        public static List<CityDto> CityList { get; set; } = new List<CityDto>()
-        {
-            new CityDto(1, "Hanoi"),
-            new CityDto(2, "Dublin"),
-        };
+        public static List<CityDto> CityList { get; set; } 
 
         public CityDto(long id, string cityName)
         {

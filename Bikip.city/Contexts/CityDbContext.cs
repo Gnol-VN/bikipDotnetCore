@@ -11,7 +11,7 @@ namespace CityProject.Contexts
 
         public CityDbContext(DbContextOptions options) : base(options)
         {
-            Database.EnsureCreated();
+            // Database.EnsureCreated();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AutoMapper;
+using CityProject.Entities;
 using CityProject.Models;
+using CityProject.Repositories;
 using CityProject.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -14,24 +17,40 @@ namespace Bikip.city.Controller
     {
         private readonly ILogger<CityController> _logger;
         private readonly IMailService _mailService;
+        private readonly ICityRepository _cityRepository;
+        private readonly IMapper _mapper;
 
-        public CityController(ILogger<CityController> logger, IMailService mailService)
+        public CityController(ILogger<CityController> logger, IMailService mailService, ICityRepository cityRepository, IMapper mapper)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mailService = mailService ?? throw new ArgumentException(nameof(mailService));
+            _cityRepository = cityRepository ?? throw new ArgumentNullException(nameof(cityRepository));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         [HttpGet("getall")]
         public IActionResult GetCities()
         {
             _logger.LogInformation("Custom logging message");
-            return Ok(CityDto.CityList);
+            return Ok(_cityRepository.GetCities());
         }
 
         [HttpGet("getonebyid/{id}")]
-        public IActionResult GetOneCity(long id)
+        public IActionResult GetOneCity(long id, bool includeHotels = false)
         {
-            ObjectResult objectResult = new ObjectResult("ID: " + id);
+            City city = _cityRepository.GetCity(id, includeHotels);
+            ObjectResult objectResult;
+            if (includeHotels)
+            {
+                CityDto cityWithHotels = _mapper.Map<CityDto>(city);
+                objectResult = new ObjectResult(cityWithHotels);
+            }
+            else
+            {
+                CityDToWithoutHotel cityWithoutHotel = _mapper.Map<CityDToWithoutHotel>(city);
+                objectResult = new ObjectResult(cityWithoutHotel);
+            }
+            
             objectResult.StatusCode = 201;
             return objectResult;
         }
