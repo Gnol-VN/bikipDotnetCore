@@ -48,7 +48,7 @@ namespace Bikip.city.Controller {
         [HttpGet("getall")]
         public IActionResult GetCities()
         {
-            return Ok(City.CityList);
+            return Ok(CityDto.CityList);
         }
 
         [HttpGet("getonebyid/{id}")]
@@ -62,16 +62,16 @@ namespace Bikip.city.Controller {
         [HttpDelete("deletecity/{id}")]
         public IActionResult DeleteOneCity(long id)
         {
-            City cityToBeDeleted = City.CityList.FirstOrDefault(elem => elem.id == id);
-            City.CityList.Remove(cityToBeDeleted);
+            CityDto cityToBeDeleted = CityDto.CityList.FirstOrDefault(elem => elem.Id == id);
+            CityDto.CityList.Remove(cityToBeDeleted);
             return NoContent();
         }    
 
         [HttpPost("posthotel")]
-        public IActionResult PostHotel([FromBody] Hotel hotel)
+        public IActionResult PostHotel([FromBody] HotelDto hotel)
         {
-            City.CityList[0].HotelList.Add(hotel);
-            return Created("null", City.CityList);
+            CityDto.CityList[0].HotelList.Add(hotel);
+            return Created("null", CityDto.CityList);
         }
     }
 }
@@ -162,13 +162,13 @@ Example 2, to get properties from `appsettings.[env].json`
             _configuration = configuration ?? throw new ArgumentException(nameof(configuration));
         }
 ```
-then get it by `string from = _configuration["mailSetting:from"]`
+then get it by `string from = _configuration["mailSetting:from"]`  
 Notably, to change [env], right click in project file > Debug section > Environment variable
 
-5. Log to a file
-a. Install NLog.Web.AspNetCore from Nuget
-b. Inject NLog to Program.cs: ` webBuilder.UseNLog();`
-c. Create `nlog.config` file at project level. 
+5. Log to a file  
+a. Install NLog.Web.AspNetCore from Nuget  
+b. Inject NLog to Program.cs: ` webBuilder.UseNLog();`  
+c. Create `nlog.config` file at project level.   
 
 ```
 <?xml version="1.0" encoding="utf-8" ?>
@@ -201,4 +201,105 @@ services.AddTransient<IMailService, LocalMailService>();
 services.AddTransient<LocalMailService>();
 ```
 d. Change constuctor and backing field of `CityController`, so now Controller can call dependant methods   
+
+7. Entities  
+    1. Create entities with **attributes**  
+    * [Key]
+    * [DatabaseGenerated(DatabaseGeneratedOption.Identity)]: auto increase ID (based on DB provider)
+    * [Required], [EmailAddress]: for validation
+
+For example, One to Many:  City <--> many Hotels
+```
+ public class City
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public long Id { get; set; }
+
+        [Required]
+        public string CityName { get; set; }
+
+        // One to Many implicitly
+        public List<Hotel> HotelList { get; set; }
+
+        public City()
+        {
+            HotelList = new List<Hotel>();
+        }
+    }
+```
+
+Notably, we must explicitly define a foreign key in Hotel entity, by steps:  
+  1. Define City field with { get; set;}
+  2. Define foreign key property CityID { get; set;}
+  3. Annotate navigation property with [ForeignKey("CityID")]
+```
+public class Hotel
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public long Id { get; set; }
+
+        [Required(ErrorMessage = "Custom message: hotel name is required")]
+        public string HotelName { get; set; }
+
+        [ForeignKey("CityId")] //Match to property CityId
+        public City City { get; set; }
+
+        public long CityId { get; set; }
+    }
+```
+
+# 8. Database  
+1. Database instantiate  
+   1.  Create CityDbContext extent DbContext  represent a session with a database.  
+   Can have many context for many purposes. 
+
+   For example, `DbSet<City> and DbSet<Hotel>` will create two tablesCities and Hotels (with PK-FK relation).  
+The constructor with `Database.EnsureCreated()` to create table if not exist  
+
+    ```
+    public class CityDbContext : DbContext 
+    {
+        public DbSet<City> Cities { get; set; }
+
+        public DbSet<Hotel> Hotels { get; set; }
+
+        public CityDbContext(DbContextOptions options) : base(options)
+        {
+            Database.EnsureCreated();
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // Seeding data
+            modelBuilder.Entity<City>()
+                .HasData(
+                    new City{Id = 1, CityName = "Hanoi"},
+                    new City{Id = 2, CityName = "Dublin"}
+                    );
+            
+            modelBuilder.Entity<Hotel>()
+                .HasData(
+                    new Hotel{Id = 1, HotelName = "Hilton", CityId = 1, Email = "hilton@gmail.com"},
+                    new Hotel{Id = 2, HotelName = "Movenpick", CityId = 2, Email = "movenpick@gmail.com"}
+                );
+        }      
+    }
+    ```  
+ 
+    2. Register CityDbContext to DI container (remember to add Nuget Microsoft.EntityFrameworkCore.SqlServer
+)
+    ```
+        string connString = @"Server=(localdb)\MSSQLLocalDB;Database=CityInfoDB;Trusted_Connection=True;";
+        services.AddDbContext<CityDbContext>(builder =>
+        {
+            builder.UseSqlServer(connString);
+        });
+    ```
+    3. To use ORM method...
+  
+2 Migration: like Liquibase  
+* `Package Manager Console -> Add-migration [migration file name]` this will scan [all context files].OnModelCreating to **generate seeding data**
+* `Package Manager Console -> Update-database` apply migration to database
 

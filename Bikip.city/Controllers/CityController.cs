@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CityProject.Model;
+using CityProject.Models;
 using CityProject.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -25,7 +25,7 @@ namespace Bikip.city.Controller
         public IActionResult GetCities()
         {
             _logger.LogInformation("Custom logging message");
-            return Ok(City.CityList);
+            return Ok(CityDto.CityList);
         }
 
         [HttpGet("getonebyid/{id}")]
@@ -39,17 +39,17 @@ namespace Bikip.city.Controller
         [HttpDelete("deletecity/{id}")]
         public IActionResult DeleteOneCity(long id)
         {
-            City cityToBeDeleted = City.CityList.FirstOrDefault(elem => elem.id == id);
-            City.CityList.Remove(cityToBeDeleted);
+            CityDto cityToBeDeleted = CityDto.CityList.FirstOrDefault(elem => elem.Id == id);
+            CityDto.CityList.Remove(cityToBeDeleted);
             _mailService.Send();
             return NoContent();
         }    
 
         [HttpPost("posthotel")]
-        public IActionResult PostHotel([FromBody] Hotel hotel)
+        public IActionResult PostHotel([FromBody] HotelDto hotel)
         {
-            City.CityList[0].HotelList.Add(hotel);
-            return Created("null", City.CityList);
+            CityDto.CityList[0].HotelList.Add(hotel);
+            return Created("null", CityDto.CityList);
         }
 
         [HttpGet("badrequest")]

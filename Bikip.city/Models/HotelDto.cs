@@ -4,9 +4,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CityProject.Model
+namespace CityProject.Models
 {
-    public class Hotel
+    public class HotelDto
     {
         [Required(ErrorMessage = "Custom message: hotel name is required")]
         public string HotelName { get; set; }
