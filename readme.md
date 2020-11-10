@@ -1,42 +1,36 @@
-Ctrl K, V to open markdown tab in VSCode
-
-Use ctrl-shift-P and select "OmniSharp: Select Project" to select the correct project (a .sln file).
-
-
+# 1. At a glance
 >dotnet new sln --name bikipDotnetCore  
 dotnet new console --name CityProject --output Bikip.City    
 dotnet sln add .\Bikip.City\CityProject.csproj
 
-Program.cs: for configuration (Web host, web server) and start the application
+`Program.cs` for configuration (Web host, web server) and start the application
 
-Startup.cs: entry point of the web application
+`Startup.cs` entry point of the web application
 
-Startup.cs > ConfigureServices method: Dependency Injection: Register services inside 
+`Startup.cs > ConfigureServices()` Dependency Injection: Register services inside 
 
-Startup.cs > Configure method: use the services in ConfigureServices method to response to user requests
+`Startup.cs > Configure()` use the services in ConfigureServices method to response to user requests
 
-Http pipeline contains Middleware(s). Middleware are software components to decorate a request and respond before sending back to client. For example,
-    Request -> Logger middleware -> Auth middleware -> Route to /api middleware
+Http pipeline contains **Middleware(s)**. Middleware are software components to decorate a request and respond before sending back to client.  
+For example, Request -> Logger middleware -> Auth middleware -> Route to /api middleware
 
-2) Add an endpoint   
+# 2. Add an endpoint   
 
-2.1 In ConfigureServices method, add
-> services.AddMvc();
+1. Inside ConfigureServices() method, add
+` services.AddMvc();`
 
-In Configure method, add
+Inside Configure() method, add
 ```
 app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+    {
+        endpoints.MapControllers();
+    });
 ```
-2.2 Create CityController.cs, with 
-> [ApiController] and [Route("api/[controller]")] attribute at class level  
+2. Create CityController.cs extending Microsoft.AspNetCore.Mvc.ControllerBase
+> C# Attribute is Java Annotation
+* Add class level **attributes** [ApiController] and [Route("api/[controller]")]  
 <b>[controller]</b> will be resolved as 'city' (prefix of CityController file name)
-
-> Remember extending <b>ControllerBase</b> from Microsoft.AspNetCore.Mvc
-
-> [HttpGet("getall")] <b>attribute</b> at method level
+* [HttpGet("getall")] <b>attribute</b> at method level
 
 For example, GET, POST, DELETE methods
 ```
@@ -76,23 +70,25 @@ namespace Bikip.city.Controller {
     }
 }
 ```
-2.3 Inputs of API 
-2.3.1 Path Variable
-```
-[HttpGet ("getonebyid/{id}")]
-public string GetOneCity (long id) 
-```
+Notably, **IActionResult**: base class for consumer responses (Json, xml, string ... )
 
-2.3.2 Request Body
+3. API Inputs
+    1. Path Variable
+    ```
+    [HttpGet ("getonebyid/{id}")]
+    public string GetOneCity (long id) 
+    ```
 
-    public IActionResult PostHotel([FromBody] Hotel hotel)
+    2. Request Body
+    `public IActionResult PostHotel([FromBody] Hotel hotel)`
 
+    3. Request Param  
+    Don't need any attributes like @RequestParams. It is automapped to method parameters  
+    `public IActionResult GetOneCity(long id, bool includeHotels = false)`
 
+    To retrive: `Request.Query["myKey"]`
 
-Other
-IActionResult: base class for consumer responses (Json, xml, string ... )
-
-2.4. Status code  
+4. Status code  
 Example of returning 201
 ```
 public IActionResult GetOneCity(long id)
@@ -106,7 +102,7 @@ or, for short, just `return BadRequest("Custom message") or Unauthorized("...");
 
 `204`: No content (For PUT and DELETE)
 
-2.5. Input / output formatter  
+5. Input / output formatter  
 Each consumer can request a different output format, for example, JSON or XML.  
 AspNetCore supports Input and Output formatters by adding AddMvcOptions into Startup.cs / ConfigureServices() method
 ```
@@ -125,9 +121,9 @@ By default, JSON format is return. Notably, `OutputFormatters` array <b>already<
 * Do not hard code `return new JsonResult()`. Use `return Ok()` instead
 
 
-3. Model   
+# 3. DTO   
 
-3.4. Required and validated fields
+1. Required and validated fields
 
 ```
     [Required(ErrorMessage = "Custom message: email is required")]
@@ -137,8 +133,8 @@ By default, JSON format is return. Notably, `OutputFormatters` array <b>already<
 
 This namespace `System.ComponentModel.DataAnnotations` provides input validation before mapping into models
 
-4. Dependency Injection   
-<b>Inversion of control</b>: to delegate [the instantiation a concrete dependent for a class] to an external component
+# 4. Dependency Injection   
+<b>Inversion of control</b>: to delegate [the instantiation a concrete dependent for a class] to an external component  
 <b>Dependencies Injection</b>: use a central object - the container - to do two things:
 * Instantiate the concrete dependant
 * Bind this dependant to the class to use (that class needs a backing field of Interface type to hold the dependant)
@@ -163,9 +159,9 @@ Example 2, to get properties from `appsettings.[env].json`
         }
 ```
 then get it by `string from = _configuration["mailSetting:from"]`  
-Notably, to change [env], right click in project file > Debug section > Environment variable
+Besides, to change [env], right click in project file > Debug section > Environment variable
 
-5. Log to a file  
+# 5. Log to a file  
 a. Install NLog.Web.AspNetCore from Nuget  
 b. Inject NLog to Program.cs: ` webBuilder.UseNLog();`  
 c. Create `nlog.config` file at project level.   
@@ -189,7 +185,7 @@ c. Create `nlog.config` file at project level.
 d. Log is located in `project\bin\Debug\netcoreapp3.1\nlog-2020-10-26.log`
 
 
-6. Add a service   
+# 6. Add a service   
 For example, create two mail services: <b>Local</b> and <b>Cloud</b>  
 a. Create an interface for a service (For Dependency Injection later)   
 b. Create two concrete classes `LocalMailService` and `CloudMailService`   
