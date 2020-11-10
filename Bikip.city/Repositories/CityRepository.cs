@@ -42,5 +42,19 @@ namespace CityProject.Repositories
         {
             return _cityDbContext.Hotels.FirstOrDefault(hotel => hotel.CityId == cityId && hotel.Id == hotelId);
         }
+
+        public bool IsCityExists(long cityId)
+        {
+            return _cityDbContext.Cities.Any(city => city.Id == cityId);
+        }
+        
+        /// <summary>
+        /// This method actually makes change to DB
+        /// </summary>
+        /// <returns>The number of changed entities</returns>
+        public bool Save()
+        {
+            return (_cityDbContext.SaveChanges() >= 0);
+        }
     }
 }

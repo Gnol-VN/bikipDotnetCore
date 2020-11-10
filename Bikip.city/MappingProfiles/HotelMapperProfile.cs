@@ -4,11 +4,11 @@ using CityProject.Models;
 
 namespace CityProject.MappingProfiles
 {
-    public class HotelMapper : Profile
+    public class HotelMapperProfile : Profile
     {
-        public HotelMapper()
+        public HotelMapperProfile()
         {
-            CreateMap<Hotel, HotelDto>();
+            CreateMap<Hotel, HotelDto>().ReverseMap();
         }
     }
 }

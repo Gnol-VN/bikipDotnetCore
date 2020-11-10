@@ -202,61 +202,95 @@ services.AddTransient<LocalMailService>();
 ```
 d. Change constuctor and backing field of `CityController`, so now Controller can call dependant methods   
 
-7. Entities  
-    1. Create entities with **attributes**  
+# 7. Entities  
+1. Create entities with **attributes**  
     * [Key]
     * [DatabaseGenerated(DatabaseGeneratedOption.Identity)]: auto increase ID (based on DB provider)
     * [Required], [EmailAddress]: for validation
 
-For example, One to Many:  City <--> many Hotels
-```
- public class City
-    {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Id { get; set; }
-
-        [Required]
-        public string CityName { get; set; }
-
-        // One to Many implicitly
-        public List<Hotel> HotelList { get; set; }
-
-        public City()
+    For example, One to Many:  City <--> many Hotels
+    ```
+     public class City
         {
-            HotelList = new List<Hotel>();
+            [Key]
+            [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+            public long Id { get; set; }
+
+            [Required]
+            public string CityName { get; set; }
+
+            // One to Many implicitly
+            public List<Hotel> HotelList { get; set; }
+
+            public City()
+            {
+                HotelList = new List<Hotel>();
+            }
+        }
+    ```
+
+    Notably, we must explicitly define a foreign key in Hotel entity, by steps:  
+      1. Define City field with { get; set;}
+      2. Define foreign key property CityID { get; set;}
+      3. Annotate navigation property with [ForeignKey("CityID")]
+    ```
+    public class Hotel
+        {
+            [Key]
+            [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+            public long Id { get; set; }
+
+            [Required(ErrorMessage = "Custom message: hotel name is required")]
+            public string HotelName { get; set; }
+
+            [ForeignKey("CityId")] //Match to property CityId
+            public City City { get; set; }
+
+            public long CityId { get; set; }
+        }
+    ```
+2. AutoMapper: to map between Entities <--> DTOs (two-way)  
+Mapper maps the properties of the 1st object to the **SAME properties** of 2nd object. For unexisting properties in either side, it just ignores
+    1. Setup
+    * Add nuget AutoMapper.Extensions.Microsoft.DependencyInjection
+    * Add DI in Startup.cs `services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());`  
+    2. Create MapperProfiles  
+    Mapper Profiles will be scanned and auto-included in bootstrap
+    ```
+    public class CityMapperProfile : Profile
+    {
+        public CityMapperProfile()
+        {
+            // To declare mapping method from 1st object to 2nd object. Can have many mapping methods
+            // ReverseMap() to have two-way mapping
+            CreateMap<City, CityDto>().ReverseMap();
+            CreateMap<City, CityDToWithoutHotel>().ReverseMap();
         }
     }
-```
-
-Notably, we must explicitly define a foreign key in Hotel entity, by steps:  
-  1. Define City field with { get; set;}
-  2. Define foreign key property CityID { get; set;}
-  3. Annotate navigation property with [ForeignKey("CityID")]
-```
-public class Hotel
+    
+    public class HotelMapperProfile : Profile
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Id { get; set; }
-
-        [Required(ErrorMessage = "Custom message: hotel name is required")]
-        public string HotelName { get; set; }
-
-        [ForeignKey("CityId")] //Match to property CityId
-        public City City { get; set; }
-
-        public long CityId { get; set; }
+        public HotelMapperProfile()
+        {
+            CreateMap<Hotel, HotelDto>().ReverseMap();
+        }
     }
-```
+
+    ```
+    3. Usage
+        1. Add DI to Controller: private interface field & constructor `private readonly IMapper _mapper;`
+        2. Map: `.Map<To>(From)`, for example:
+           1. For one: `CityDto cityWithHotels = _mapper.Map<CityDto>(city);`
+           2. For list: `List<CityDto> cityWithHotels = _mapper.Map<List<CityDto>>(city);`
+
 
 # 8. Database  
-1. Database instantiate  
-   1.  Create CityDbContext extent DbContext  represent a session with a database.  
-   Can have many context for many purposes. 
+1. Create DbContext
+    1.  Create CityDbContext extent DbContext  represent a session with a database.  
+    Can have many context for many purposes. 
 
-   For example, `DbSet<City> and DbSet<Hotel>` will create two tablesCities and Hotels (with PK-FK relation).  
-The constructor with `Database.EnsureCreated()` to create table if not exist  
+    For example, `DbSet<City> and DbSet<Hotel>` will create two tablesCities and Hotels (with PK-FK relation).  
+    The constructor with `Database.EnsureCreated()` to create table if not exist  
 
     ```
     public class CityDbContext : DbContext 
@@ -288,8 +322,7 @@ The constructor with `Database.EnsureCreated()` to create table if not exist
     }
     ```  
  
-    2. Register CityDbContext to DI container (remember to add Nuget Microsoft.EntityFrameworkCore.SqlServer
-)
+    2. Register CityDbContext to DI container (remember to add Nuget Microsoft.EntityFrameworkCore.SqlServer)
     ```
         string connString = @"Server=(localdb)\MSSQLLocalDB;Database=CityInfoDB;Trusted_Connection=True;";
         services.AddDbContext<CityDbContext>(builder =>
@@ -297,9 +330,97 @@ The constructor with `Database.EnsureCreated()` to create table if not exist
             builder.UseSqlServer(connString);
         });
     ```
-    3. To use ORM method...
+2. Create Repository with ORM methods  
+    1. Create Interface  
+    Normally, use IEnumerable to retrive list of objects. We can instead use IQueryable for building complex query.
+    ```
+     public interface ICityRepository
+        {
+            IEnumerable<City> GetCities(); 
+            City GetCity(long cityId, bool includeHotels);
+            IEnumerable<Hotel> GetHotelsInOneCity(long cityId);
+            Hotel GetHotel(long cityId, long hotelId);
+            bool IsCityExists(long cityId);
+            bool Save();
+        }
+
+    ```
+    2. Create Concrete repository with DbContext injected
+    3. Register DI on Startup.cs
+    >services.AddScoped<ICityRepository, CityRepository>();  // AddScoped(): for each session  
+
+    This contains concrete ORM methods.  
+    Controller -> Service -> Repo -> Db Context. Repo works with DbContext to CRUD entity, **via context.DbSet<>**.  
+    * To get one object, use context.dbset.where(column**s**).**FirstOrDefault()**
+    * To get all list, use context.dbset.where(column**s**).**ToList()**    
+    
+    4. Implementation
+   
+    ```
+    public class CityRepository : ICityRepository
+    {
+        private readonly CityDbContext _cityDbContext; // Concrete type for injection
+
+        public CityRepository(CityDbContext dbContext)
+        {
+            _cityDbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        }
+
+        public IEnumerable<City> GetCities()
+        {
+            return _cityDbContext.Cities.ToList();
+        }
+
+        public City GetCity(long cityId, bool includeHotels)
+        {
+            if (includeHotels)
+            {
+                return _cityDbContext.Cities
+                    .Include(city => city.HotelList)  // To include navigational properties (Foreign properties)
+                    .FirstOrDefault(city => city.Id == cityId);
+            }
+
+            return _cityDbContext.Cities.FirstOrDefault(city => city.Id == cityId);
+        }
+
+        public IEnumerable<Hotel> GetHotelsInOneCity(long cityId)
+        {
+            return _cityDbContext.Hotels.Where(hotel => hotel.CityId == cityId).ToList();
+        }
+
+        public Hotel GetHotel(long cityId, long hotelId)
+        {
+            return _cityDbContext.Hotels.FirstOrDefault(hotel => hotel.CityId == cityId && hotel.Id == hotelId);
+        }
+
+        public bool IsCityExists(long cityId)
+        {
+            return _cityDbContext.Cities.Any(city => city.Id == cityId);
+        }
+        
+        public bool Save()
+        {
+            return (_cityDbContext.SaveChanges() >= 0);
+        }
+    }
+    ```
+    Notably, **Save()** method actually makes change to DB.  
+   
+3. Example of full flow from Controller -> Repo -> DbContext
+```
+    [HttpPost("posthoteltocity/{cityId}")]
+    public IActionResult PostHotelToCity([FromBody] HotelDto hotelDTO, long cityId)
+    {
+        City city = _cityRepository.GetCity(cityId, true);
+        Hotel hotel = _mapper.Map<Hotel>(hotelDTO);
+        city.HotelList.Add(hotel);
+        _cityRepository.Save();
+        CityDto returnCityDto = _mapper.Map<CityDto>(city);
+        return Created("null", returnCityDto);
+    }
+```
   
-2 Migration: like Liquibase  
+# 9. Migration: like Liquibase  
 * `Package Manager Console -> Add-migration [migration file name]` this will scan [all context files].OnModelCreating to **generate seeding data**
 * `Package Manager Console -> Update-database` apply migration to database
 

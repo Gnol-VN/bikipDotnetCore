@@ -13,5 +13,9 @@ namespace CityProject.Repositories
         IEnumerable<Hotel> GetHotelsInOneCity(long cityId);
 
         Hotel GetHotel(long cityId, long hotelId);
+
+        bool IsCityExists(long cityId);
+
+        bool Save();
     }
 }

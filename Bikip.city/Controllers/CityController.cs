@@ -71,6 +71,17 @@ namespace Bikip.city.Controller
             return Created("null", CityDto.CityList);
         }
 
+        [HttpPost("posthoteltocity/{cityId}")]
+        public IActionResult PostHotelToCity([FromBody] HotelDto hotelDTO, long cityId)
+        {
+            City city = _cityRepository.GetCity(cityId, true);
+            Hotel hotel = _mapper.Map<Hotel>(hotelDTO);
+            city.HotelList.Add(hotel);
+            _cityRepository.Save();
+            CityDto returnCityDto = _mapper.Map<CityDto>(city);
+            return Created("null", returnCityDto);
+        }
+
         [HttpGet("badrequest")]
         public IActionResult GetBadRequest()
         {
